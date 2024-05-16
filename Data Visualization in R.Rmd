@@ -1,0 +1,402 @@
+---
+title: "Exploratory Data Analysis and Data Visualization"
+author: "Preethi G C(2314578)"
+date: "2024-03-31"
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
+```
+
+
+```{r, echo=TRUE, include=TRUE, warning=FALSE}
+library(knitr)
+```
+
+
+## Data Acqusition and Preliminary examination of Crime data
+```{r, echo=TRUE, include=TRUE, warning=FALSE}
+
+crime_data <- read.csv(file = "crime23.csv", TRUE , ",")
+temp_data <- read.csv(file = "temp2023.csv", TRUE , ",")
+```
+
+###### Dimensions of crime data
+
+```{r, echo=TRUE, include=TRUE, warning=FALSE}
+# Display dimension of crime data
+dim(crime_data)
+
+```
+
+##### Number of rows in crime data
+
+```{r, echo=TRUE, include=TRUE, warning=FALSE}
+# Total number of rows
+nrow(crime_data)
+
+```
+
+##### Number of columns in crime data
+
+```{r, echo=TRUE, include=TRUE, warning=FALSE}
+# Total number of columns 
+ncol(crime_data)
+
+```
+
+
+##### Columns of crime data
+
+*Table 1: Columns of Crime data*
+```{r, echo=TRUE, include=TRUE, warning=FALSE}
+# Display column names of crime data
+knitr::kable(data.frame(Column_names = names(crime_data)), caption = 'Column names of Crime data')
+```
+
+
+##### Sample of Crime dataset
+*Table 2: Representation of first 6 rows of crime data*
+```{r, echo=TRUE, include=TRUE, warning=FALSE}
+knitr::kable(head(crime_data), caption = 'First 6 rows of Crime data')
+
+```
+
+##### Configuaration of crime data
+```{r, echo=TRUE, include=TRUE, warning=FALSE}
+configuaration_output <- capture.output(str(crime_data))
+variable_names <- gsub("^[[:space:]]*([^:]+):.*$", "\\1", configuaration_output)
+data_types <- gsub("^[[:space:]]*[^:]+: *([^ ]+).*", "\\1", configuaration_output)
+structure_table <- data.frame('Column_Names' = variable_names , 'Data_type' = data_types)
+knitr::kable(structure_table, caption = 'Configuaration of crime data')
+
+```
+
+##### Structure of crime data
+
+```{r, echo=TRUE, include=TRUE, warning=FALSE}
+str(crime_data)
+```
+
+```{r, echo=TRUE, include=TRUE, warning=FALSE}
+mode_value <- mode(crime_data$outcome_status)
+crime_data$outcome_status[is.na(crime_data$outcome_status)] <- mode_value
+
+```
+
+##### Missing Values of crime data
+
+```{r, echo=TRUE, include=TRUE, warning=FALSE}
+crime_data[crime_data== ""] <- NA
+missing_values <- colSums(is.na(crime_data))
+missing_values_df <- data.frame('Missing value census' = missing_values)
+knitr::kable(missing_values_df)
+
+```
+
+##### Summary of Crime dataset
+
+```{r, echo=TRUE, include=TRUE, warning=FALSE}
+knitr::kable(t(summary(crime_data)), caption = 'Summary of Crime data')
+
+```
+
+
+## Data Visualization of crime data
+
+
+```{r, echo=TRUE, include=TRUE, warning=FALSE}
+library(kableExtra)
+
+frequency_table <- table(crime_data$category)
+frequency_df <- as.data.frame(frequency_table)
+colnames(frequency_df) <- c("Category", "Frequency")
+kable(frequency_df, caption = "Frequency of Crime Categories") %>%
+  kable_styling(bootstrap_options = "striped", full_width = FALSE)
+
+
+```
+
+
+```{r, echo=TRUE, include=TRUE, warning=FALSE}
+library(plotly)
+library(ggplot2)
+
+custom_colors <- c("#000033" , "#000066" , "#000099" , "#0000CC" , '#0000FF' , '#003366' , '#003399' , '#0033CC' , '#0033FF' , '#006699' , '#0066CC' , '#0066FF' , '#0099CC' , '#0099FF')
+
+s <- ggplot(frequency_df, aes(x = Category, y = Frequency, fill = Category)) +
+  geom_bar(stat = 'identity', fill = custom_colors) +
+  labs(X = 'Category', Y = 'Frequency', title = 'Frequency Distribution') +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+ggplotly(s)
+  
+```
+*Graph 1: Bar plot of Frequencies*
+
+
+```{r, echo=TRUE, include=TRUE, warning=FALSE}
+library(RColorBrewer)
+
+```
+
+
+```{r, echo=TRUE, include=TRUE, warning=FALSE}
+library(plotly)
+custom_colors <- c("#ADD8E6","blue")
+pie_chart <- plot_ly(data = crime_data, labels = ~location_type, type = "pie", 
+                                 marker = list(colors = custom_colors)) %>%
+  layout(title = "Incident location Descriptors", showlegend = TRUE)
+pie_chart
+
+```
+
+*Graph 2: Visualization of location types with a pie chart*
+
+
+```{r, echo=TRUE, include=TRUE, warning=FALSE}
+library(dplyr)
+library(ggplot2)
+
+df <- crime_data %>%
+  summarise(incident_count = n())
+
+ggplot(df, aes(x = date, y = incident_count)) +
+  geom_point(color = "#0099FF", size = 3) + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Time Series of Incidents", x = "Date", y = "Number of Incidents")
+
+```
+
+*Graph 3: Dot plot of incidents*
+
+
+```{r, echo=TRUE, include=TRUE, warning=FALSE}
+library(ggplot2)
+ggplot(data = crime_data, aes(x = lat)) +
+  geom_histogram(fill = 'darkgrey', color = 'black', bins = 20) +
+  labs(title = 'Latitude Frequency Distribution', x = 'Latitude', y = 'Frequency')
+
+```
+
+*Graph 4: Distribution of latitude using Histogram*
+
+
+```{r, echo=TRUE, include=TRUE, warning=FALSE}
+library(ggplot2)
+
+ggplot(crime_data, aes(x = long)) +
+  geom_density(color = '#0099CC', size = 1) +
+  labs(title = 'Longitude illumination', x = 'Longitude', y = 'Frequency') +
+  theme_minimal()
+
+```
+
+*Graph 5: Longitude Density plot*
+
+
+```{r, echo=TRUE, include=TRUE, warning=FALSE}
+library(ggplot2)
+orange_palette <- colorRampPalette(c('darkorange', 'lightyellow'))
+
+box_plot <- ggplot(data = crime_data, aes(x = category, y = long, fill = category)) +
+  geom_boxplot() +  
+  scale_fill_manual(values = orange_palette(14)) +
+  labs(title = "Longitude trends by Crime Category", x = "Crime Category", y = "Longitude") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+box_plot
+
+```
+
+*Graph 6: Box plot of longitude trends*
+
+
+```{r, echo=TRUE, include=TRUE, warning=FALSE}
+library(ggplot2)
+lavender_palette <- colorRampPalette(c('#E6E6FA', '#9370DB'))
+violin_plot <- ggplot(data = crime_data, aes(x = date, y = lat, fill = date)) +
+  geom_violin() +
+  scale_fill_manual(values = lavender_palette(14)) +
+  labs(title = 'Violin plot', x = 'Date', y = 'Latitude') +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  theme(legend.key.size = unit(0.3, "cm")) 
+violin_plot
+
+```
+*Graph 7: Violin plot of latitude*
+
+
+```{r, echo=TRUE, include=TRUE, warning=FALSE}
+library(leaflet)
+
+my_palette <- colorRampPalette(c("red", "blue"))
+map <- leaflet(crime_data) %>%
+  addTiles() %>%
+  addCircleMarkers(
+    radius = ~ 0.00002,
+    popup = ~paste("Reason: ", crime_data$category),
+    color = my_palette(14)) %>%
+  addLegend("bottomleft", 
+            labels = unique(crime_data$category),
+            opacity = 1,
+            colors = my_palette(14),
+            title = "Category")
+
+map
+```
+
+*Graph 8: Map*
+
+
+## Data Analysis of Temperature Data
+
+
+##### Dimenions of Temperature Data
+```{r, echo=TRUE}
+#Display the dimensions of temperature dataset
+dim(temp_data)
+
+```
+##### Number of rows in temperature data
+
+```{r, echo=TRUE}
+nrow(temp_data)
+
+```
+##### Number of columns in temperature data
+
+```{r, echo=TRUE}
+ncol(temp_data)
+
+```
+##### Columns of temperature data
+
+```{r, echo=TRUE, include=TRUE, warning=FALSE}
+knitr::kable(data.frame(Column_names = names(temp_data)), caption = 'Column names of Temperature data')
+
+```
+##### Sample data of Temperature dataset
+```{r, echo=TRUE, include=TRUE, warning=FALSE}
+
+knitr::kable((head(temp_data)), caption = 'First 6 rows of Temperature data')
+
+```
+
+##### Configuaration of temperature data
+
+```{r, echo=TRUE, include=TRUE, warning=FALSE}
+configuaration_output <- capture.output(str(temp_data))
+variable_names <- gsub("^[[:space:]]*([^:]+):.*$", "\\1", configuaration_output)
+data_types <- gsub("^[[:space:]]*[^:]+: *([^ ]+).*", "\\1", configuaration_output)
+structure_table <- data.frame('Column_Names' = variable_names , 'Data_type' = data_types)
+knitr::kable(structure_table, caption = 'Configuaration of crime data')
+
+```
+
+
+##### Missing Values of Temperature data
+
+```{r, echo=TRUE, include=TRUE, warning=FALSE}
+temp_data[temp_data== ""] <- NA
+missing_values <- colSums(is.na(temp_data))
+missing_values_df <- data.frame('Missing value census' = missing_values)
+knitr::kable(missing_values_df)
+
+```
+
+
+```{r, echo=TRUE, include=TRUE, warning=FALSE}
+
+
+mean_value <- mean(temp_data$Precmm, na.rm = TRUE)
+temp_data$Precmm[is.na(temp_data$Precmm)] <- mean_value
+
+mean_value <- mean(temp_data$lowClOct, na.rm = TRUE)
+temp_data$lowClOct[is.na(temp_data$lowClOct)] <- mean_value
+
+mean_value <- mean(temp_data$SunD1h, na.rm = TRUE)
+temp_data$SunD1h[is.na(temp_data$SunD1h)] <- mean_value
+
+```
+
+
+```{r, echo=TRUE, include=TRUE, warning=FALSE}
+library(ggplot2)
+
+sina_plot <- ggplot(data = temp_data, aes(x = TdAvgC, y = HrAvg)) +
+  geom_violin() +
+  geom_point() +
+  labs(title = 'Sina plot', x = 'Average dew point', y = 'Average Relative Humidity') 
+
+sina_plot
+
+```
+
+*Graph 9: Sina plot* 
+
+
+```{r, echo=TRUE, include=TRUE, warning=FALSE}
+scatter_plot<- ggplot(data = temp_data, aes(x = TemperatureCMin, y = TemperatureCMax, color = TemperatureCAvg)) +
+  geom_point() +
+  labs(title = 'Scatter plot', x = 'min temperature', y = 'max temperature') +
+  scale_alpha_manual(values = c('A' = 'Blue'))
+scatter_plot
+
+```
+
+*Graph 10: Scatter plot*
+
+
+```{r, echo=TRUE, include=TRUE, warning=FALSE}
+library(GGally)
+
+data <- temp_data[, c("Precmm", "TotClOct", "lowClOct", "SunD1h")]
+pair_plot <- ggpairs(data, 
+                     title = 'Pair plot matrix',
+                     upper = list(continous = 'cor'),
+                     lower = list(continuous = 'points'),
+                     diag = list(continuous = 'bar'))
+
+pair_plot
+```
+
+*Graph 11: Pair plot matrix*
+
+
+
+```{r, echo=TRUE, include=TRUE, warning=FALSE}
+library(corrplot)
+
+preferred_column <- c("TemperatureCAvg", "TemperatureCMax", "TemperatureCMin", "TdAvgC","HrAvg", "WindkmhInt", "WindkmhGust", "Precmm", "TotClOct", "lowClOct")
+preferred_data <- temp_data[, preferred_column]
+correlation_matrix <- cor(preferred_data, use = "complete.obs")
+my_palette <- colorRampPalette(c('#FFD580', '#CC5500'))
+corrplot(correlation_matrix, method = "color", type = "lower", tl.col = "black",
+         tl.cex = 0.7, tl.srt = 45,
+         title = 'Correlation matrix for temperature variables', 
+         col = my_palette(10),
+         addCoef.col= 'black', is.corr = TRUE, diag = TRUE, outline = TRUE, 
+         order ="hclust",
+         mar = c(0, 0, 2, 0),
+         number.cex =  0.5)
+```
+
+*Graph 12: Correlation matrix*
+
+
+```{r, echo=TRUE, include=TRUE, warning=FALSE}
+library(ggplot2)
+
+ggplot(temp_data, aes(x = Date)) +
+  geom_line(aes(y = WindkmhGust), color = "#C8A2C8", size = 0.5) + 
+  geom_line(aes(y = WindkmhInt), color = "#5453A6", size = 0.5) +
+  labs(x = "Date", y = "Wind (km/h)", title = "Wind Over Time")
+
+```
+
+*Graph 13: Time series plot*
+
